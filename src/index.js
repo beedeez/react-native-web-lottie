@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import { View } from 'react-native';
+import { View, Animated } from 'react-native';
 import bodymovin from 'bodymovin';
 
 export default class Animation extends PureComponent {
@@ -8,6 +8,20 @@ export default class Animation extends PureComponent {
 
   componentDidMount() {
     this.loadAnimation(this.props);
+    this.props.progress.addListener(args => {
+      if (args.value > 0) {
+        this.anim.play();
+      } else {
+        this.anim.goToAndStop(0);
+      }
+    });
+
+    /*
+    this.props.progress._animation.onUpdate(() => {
+      console.log(arguments);
+      console.log(this.props.progress._value);
+    });
+    */
   }
 
   componentWillReceiveProps(nextProps) {
@@ -26,7 +40,7 @@ export default class Animation extends PureComponent {
       animationData: props.source,
       renderer: 'svg',
       loop: props.loop || false,
-      autoplay: true,
+      autoplay: props.autoplay,
     });
   };
 
