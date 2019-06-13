@@ -40,6 +40,6 @@
     "react-native-web": "*"
   },
   "dependencies": {
-    "bodymovin": "^4.12.3"
+    "lottie-web": "5.5.0"
   }
 }
