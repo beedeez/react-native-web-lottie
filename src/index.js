@@ -1,59 +1,73 @@
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import { View, Animated } from 'react-native';
-import bodymovin from 'bodymovin';
+import { View } from 'react-native';
+import lottie from 'lottie-web';
 
-export default class Animation extends PureComponent {
-	animationDOMNode = null;
+class Animation extends PureComponent {
+  componentDidMount() {
+    this.loadAnimation(this.props);
 
-	componentDidMount() {
-		this.loadAnimation(this.props);
-		this.props.progress &&
-			this.props.progress.addListener &&
-			this.props.progress.addListener((args) => {
-				if (args.value > 0) {
-					this.anim.play();
-				} else {
-					this.anim.goToAndStop(0);
-				}
-			});
+    const { progress } = this.props;
 
-		/*
-    this.props.progress._animation.onUpdate(() => {
-      console.log(arguments);
-      console.log(this.props.progress._value);
+    if (progress && progress.addListener) {
+      progress.addListener(({ value, isPlaying }) => {
+        if (!this.anim || !this.animationDuration) {
+          return;
+        }
+
+        const toTime = this.animationDuration * value * 1000;
+
+        if (typeof value === 'number') {
+          this.anim.goToAndPlay(toTime, false);
+
+          if (!isPlaying) {
+            this.anim.pause();
+          }
+        }
+      });
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.source && nextProps.source && this.props.source.nm !== nextProps.source.nm) {
+      this.loadAnimation(nextProps);
+    }
+  }
+
+  setAnimationDOMNode = ref => {
+    this.animationDOMNode = ReactDOM.findDOMNode(ref);
+  };
+
+  setAnimationDuration = () => {
+    if (this.anim) {
+      this.animationDuration = this.anim.getDuration();
+    }
+  };
+
+  loadAnimation = props => {
+    if (this.anim) {
+      this.anim.destroy();
+    }
+
+    this.anim = lottie.loadAnimation({
+      container: this.animationDOMNode,
+      animationData: props.source,
+      renderer: 'svg',
+      loop: props.loop || false,
+      autoplay: props.autoplay,
     });
-    */
-	}
 
-	componentWillReceiveProps(nextProps) {
-		if (
-			this.props.source &&
-			nextProps.source &&
-			this.props.source.nm !== nextProps.source.nm
-		) {
-			this.loadAnimation(nextProps);
-		}
-	}
+    this.anim.addEventListener('DOMLoaded', this.setAnimationDuration);
+  };
 
-	loadAnimation = (props) => {
-		if (this.anim) {
-			this.anim.destroy();
-		}
+  animationDOMNode = null;
+  animationDuration = null;
 
-		this.anim = bodymovin.loadAnimation({
-			container: this.animationDOMNode,
-			animationData: props.source,
-			renderer: 'svg',
-			loop: props.loop || false,
-			autoplay: props.autoplay
-		});
-	};
-
-	setAnimationDOMNode = ref =>
-		(this.animationDOMNode = ReactDOM.findDOMNode(ref));
-
-	render() {
-		return <View style={this.props.style} ref={this.setAnimationDOMNode} />;
-	}
+  render() {
+    return <View style={this.props.style} ref={this.setAnimationDOMNode} />;
+  }
 }
+
+export default React.forwardRef((props, ref) => (
+  <Animation {...props} ref={typeof ref === 'function' ? cc => ref(cc && cc.anim) : ref} />
+));
