@@ -40,6 +40,6 @@
     "react-native-web": "*"
   },
   "dependencies": {
-    "lottie-web": "5.5.5"
+    "lottie-web": "^5.5.5"
   }
 }
